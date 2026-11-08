@@ -1,4 +1,3 @@
-
 import http from 'node:http';
 import path from 'node:path';
 import { mkdir, readFile, writeFile, unlink } from 'node:fs/promises';
@@ -20,15 +19,19 @@ const options = program.opts();
 const port = Number(options.port);
 const cacheDirectory = path.resolve(options.cache);
 
+// Перевірка порту
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
   console.error('Порт має бути числом від 1 до 65535.');
   process.exitCode = 1;
 } else {
+
   try {
+    // Створення теки для кешу
     await mkdir(cacheDirectory, { recursive: true });
 
+    // Створення HTTP-сервера з асинхронним обробником запитів.
     const server = http.createServer(async (req, res) => {
-     if (!['GET', 'PUT', 'DELETE'].includes(req.method)) {
+      if (!['GET', 'PUT', 'DELETE'].includes(req.method)) {
         res.writeHead(405, {
           'Content-Type': 'text/plain; charset=utf-8',
           'Allow': 'GET, PUT, DELETE'
@@ -37,7 +40,17 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
         return;
       }
 
-      const url = new URL(req.url, 'http://localhost');
+      // Отримання URL 
+      let url;
+
+      try {
+        url = new URL(req.url, 'http://localhost');
+      } catch (error) {
+        res.writeHead(404);
+        res.end('Image not found');
+        return;
+      }
+
       const match = url.pathname.match(/^\/(\d{3})$/);
 
       if (!match) {
@@ -54,8 +67,10 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
         return;
       }
 
+      // Формування шляху до файлу картинки в кеш
       const imagePath = path.join(cacheDirectory, `${statusCode}.jpg`);
 
+      // GET: отримання картинки з кешу або http.cat.
       if (req.method === 'GET') {
         try {
           let image;
@@ -72,6 +87,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
             let response;
 
             try {
+              // Надсилаємо запит до http.cat за допомогою Superagent
               response = await superagent
                 .get(`https://http.cat/${statusCode}`)
                 .buffer(true);
@@ -89,6 +105,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
               return;
             }
 
+            // Зберігаємо отриману картинку в кеші.
             await writeFile(imagePath, image);
             source = 'http.cat';
           }
@@ -110,10 +127,12 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
         }
       }
 
+      // PUT: отримання картинки з тіла запиту та збереження в кеші
       if (req.method === 'PUT') {
         try {
           const chunks = [];
 
+          // Збираємо всі частини тіла HTTP-запиту.
           for await (const chunk of req) {
             chunks.push(chunk);
           }
@@ -126,6 +145,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
             return;
           }
 
+          // Записуємо картинку 
           await writeFile(imagePath, image);
 
           res.writeHead(201, {
@@ -143,7 +163,8 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
           res.end('Internal Server Error');
         }
       }
-            if (req.method === 'DELETE') {
+
+      if (req.method === 'DELETE') {
         try {
           await unlink(imagePath);
 
@@ -153,7 +174,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 
           res.end('Image deleted');
         } catch (error) {
-          if (error.code === 'ENOENT') {
+            if (error.code === 'ENOENT') {
             res.writeHead(404, {
               'Content-Type': 'text/plain; charset=utf-8'
             });
