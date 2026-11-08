@@ -1,7 +1,9 @@
+
 import http from 'node:http';
 import path from 'node:path';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { Command } from 'commander';
+import superagent from 'superagent';
 
 const program = new Command();
 
@@ -26,11 +28,85 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
     await mkdir(cacheDirectory, { recursive: true });
 
     const server = http.createServer(async (req, res) => {
-      res.writeHead(200, {
-        'Content-Type': 'text/plain; charset=utf-8'
-      });
+      if (req.method !== 'GET') {
+        res.writeHead(405, {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Allow': 'GET'
+        });
+        res.end('Method Not Allowed');
+        return;
+      }
 
-      res.end('Proxy server is running');
+      const url = new URL(req.url, 'http://localhost');
+      const match = url.pathname.match(/^\/(\d{3})$/);
+
+      if (!match) {
+        res.writeHead(404);
+        res.end('Image not found');
+        return;
+      }
+
+      const statusCode = Number(match[1]);
+
+      if (statusCode < 100 || statusCode > 599) {
+        res.writeHead(404);
+        res.end('Image not found');
+        return;
+      }
+
+      const imagePath = path.join(cacheDirectory, `${statusCode}.jpg`);
+
+      try {
+        let image;
+        let source;
+
+        try {
+          image = await readFile(imagePath);
+          source = 'cache';
+        } catch (error) {
+          if (error.code !== 'ENOENT') {
+            throw error;
+          }
+
+          let response;
+
+          try {
+            response = await superagent
+              .get(`https://http.cat/${statusCode}`)
+              .buffer(true);
+          } catch (error) {
+            res.writeHead(404);
+            res.end('Image not found');
+            return;
+          }
+
+          image = response.body;
+
+          if (!Buffer.isBuffer(image) || image.length === 0) {
+            res.writeHead(404);
+            res.end('Image not found');
+            return;
+          }
+
+          await writeFile(imagePath, image);
+          source = 'http.cat';
+        }
+
+        res.writeHead(200, {
+          'Content-Type': 'image/jpeg',
+          'X-Image-Source': source
+        });
+
+        res.end(image);
+      } catch (error) {
+        console.error(`Request error: ${error.message}`);
+
+        res.writeHead(500, {
+          'Content-Type': 'text/plain; charset=utf-8'
+        });
+
+        res.end('Internal Server Error');
+      }
     });
 
     server.listen(port, options.host);
