@@ -1,0 +1,252 @@
+{
+  "info": {
+    "_postman_id": "08046c12-b3b7-4f2c-9fb5-f3d7b1d96e6a",
+    "name": "Lab5",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "60043835",
+    "_collection_link": "https://go.postman.co/collection/60043835-08046c12-b3b7-4f2c-9fb5-f3d7b1d96e6a?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "GET 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", () => {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Content-Type is image/jpeg\", () => {\r\n    pm.expect(pm.response.headers.get(\"Content-Type\"))\r\n        .to.include(\"image/jpeg\");\r\n});\r\n\r\npm.test(\"Image source header exists\", () => {\r\n    pm.expect([\"http.cat\", \"cache\"])\r\n        .to.include(pm.response.headers.get(\"X-Image-Source\"));\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/418",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "418"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET cached",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", () => {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Image is from cache\", () => {\r\n    pm.expect(pm.response.headers.get(\"X-Image-Source\"))\r\n        .to.eql(\"cache\");\r\n});\r\n\r\npm.test(\"Content-Type is image/jpeg\", () => {\r\n    pm.expect(pm.response.headers.get(\"Content-Type\"))\r\n        .to.include(\"image/jpeg\");\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/418",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "418"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "PUT Upload",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", () => {\r\n    pm.response.to.have.status(201);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "image/jpeg"
+          }
+        ],
+        "body": {
+          "mode": "file",
+          "file": {
+            "src": "/C:/Users/ivank/lab5/cat418.jpg"
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/200",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "200"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET Image",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", () => {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Image is from cache\", () => {\r\n    pm.expect(pm.response.headers.get(\"X-Image-Source\"))\r\n        .to.eql(\"cache\");\r\n});\r\n\r\npm.test(\"Content-Type is image/jpeg\", () => {\r\n    pm.expect(pm.response.headers.get(\"Content-Type\"))\r\n        .to.include(\"image/jpeg\");\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/200",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "200"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "DELETE",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", () => {\r\n    pm.response.to.have.status(200);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/200",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "200"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "DELETE 2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 404\", () => {\r\n    pm.response.to.have.status(404);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/200",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "200"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET missing",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 404\", () => {\r\n    pm.response.to.have.status(404);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "999"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "POST",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 405\", () => {\r\n    pm.response.to.have.status(405);\r\n});\r\n\r\npm.test(\"Allow header is correct\", () => {\r\n    pm.expect(pm.response.headers.get(\"Allow\"))\r\n        .to.include(\"GET, PUT, DELETE\");\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/418",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "418"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": ""
+    }
+  ]
+}
