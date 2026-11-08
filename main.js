@@ -1,7 +1,7 @@
 
 import http from 'node:http';
 import path from 'node:path';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, unlink } from 'node:fs/promises';
 import { Command } from 'commander';
 import superagent from 'superagent';
 
@@ -28,10 +28,10 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
     await mkdir(cacheDirectory, { recursive: true });
 
     const server = http.createServer(async (req, res) => {
-      if (!['GET', 'PUT'].includes(req.method)) {
+     if (!['GET', 'PUT', 'DELETE'].includes(req.method)) {
         res.writeHead(405, {
           'Content-Type': 'text/plain; charset=utf-8',
-          'Allow': 'GET, PUT'
+          'Allow': 'GET, PUT, DELETE'
         });
         res.end('Method Not Allowed');
         return;
@@ -134,6 +134,34 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 
           res.end('Image saved');
         } catch (error) {
+          console.error(`Request error: ${error.message}`);
+
+          res.writeHead(500, {
+            'Content-Type': 'text/plain; charset=utf-8'
+          });
+
+          res.end('Internal Server Error');
+        }
+      }
+            if (req.method === 'DELETE') {
+        try {
+          await unlink(imagePath);
+
+          res.writeHead(200, {
+            'Content-Type': 'text/plain; charset=utf-8'
+          });
+
+          res.end('Image deleted');
+        } catch (error) {
+          if (error.code === 'ENOENT') {
+            res.writeHead(404, {
+              'Content-Type': 'text/plain; charset=utf-8'
+            });
+
+            res.end('Image not found');
+            return;
+          }
+
           console.error(`Request error: ${error.message}`);
 
           res.writeHead(500, {
